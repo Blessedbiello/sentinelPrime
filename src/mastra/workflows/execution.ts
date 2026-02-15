@@ -3,6 +3,9 @@ import { RuntimeContext } from '@mastra/core/di';
 import { z } from 'zod';
 import { getListingDetailsTool, fetchCommentsTool, submitWorkTool } from '../tools/index.js';
 import { claudeCodeExecutorTool } from '../tools/claude-code-executor.js';
+import { publishToGithubTool } from '../tools/publish-to-github.js';
+
+const DEV_TYPES = ['dev', 'development', 'bounty', 'project'];
 
 // Step 1: Deep analysis — fetch full listing details and comments
 const deepAnalysis = createStep({
@@ -91,6 +94,7 @@ const executeWithClaudeCode = createStep({
     listingId: z.string(),
     slug: z.string(),
     title: z.string(),
+    type: z.string(),
     workspacePath: z.string(),
     summary: z.string(),
     artifacts: z.array(z.string()),
@@ -125,6 +129,7 @@ const executeWithClaudeCode = createStep({
       listingId: inputData.listingId,
       slug: inputData.slug,
       title: inputData.title,
+      type: inputData.type,
       workspacePath: result.workspacePath,
       summary: result.summary,
       artifacts: result.artifacts,
@@ -135,18 +140,77 @@ const executeWithClaudeCode = createStep({
   },
 });
 
-// Step 3: Human review (suspend)
+// Step 3: Publish to GitHub (dev bounties only, passthrough for others)
+const publishToGithub = createStep({
+  id: 'publish-to-github',
+  inputSchema: z.object({
+    listingId: z.string(),
+    slug: z.string(),
+    title: z.string(),
+    type: z.string(),
+    workspacePath: z.string(),
+    summary: z.string(),
+    artifacts: z.array(z.string()),
+    success: z.boolean(),
+    error: z.string().optional(),
+    eligibilityQuestions: z.array(z.string()).optional(),
+  }),
+  outputSchema: z.object({
+    listingId: z.string(),
+    slug: z.string(),
+    title: z.string(),
+    type: z.string(),
+    workspacePath: z.string(),
+    summary: z.string(),
+    artifacts: z.array(z.string()),
+    success: z.boolean(),
+    error: z.string().optional(),
+    repoUrl: z.string().optional(),
+    eligibilityQuestions: z.array(z.string()).optional(),
+  }),
+  execute: async ({ inputData }) => {
+    // Only publish to GitHub for dev-type bounties with successful execution
+    const isDevBounty = DEV_TYPES.some((t) => inputData.type.toLowerCase().includes(t));
+    if (!isDevBounty || !inputData.success) {
+      return { ...inputData, repoUrl: undefined };
+    }
+
+    const runtimeContext = new RuntimeContext();
+    const result = await publishToGithubTool.execute({
+      context: {
+        workspacePath: inputData.workspacePath,
+        repoName: inputData.slug,
+        description: `Superteam Earn bounty: ${inputData.title}`,
+        isPrivate: false,
+      },
+      runtimeContext,
+    });
+
+    return {
+      ...inputData,
+      repoUrl: result.success ? result.repoUrl : undefined,
+      // Append publish error but don't fail the whole workflow
+      error: result.success
+        ? inputData.error
+        : `${inputData.error || ''}; GitHub publish failed: ${result.error}`.replace(/^; /, ''),
+    };
+  },
+});
+
+// Step 4: Human review (suspend)
 const humanReview = createStep({
   id: 'human-review',
   inputSchema: z.object({
     listingId: z.string(),
     slug: z.string(),
     title: z.string(),
+    type: z.string(),
     workspacePath: z.string(),
     summary: z.string(),
     artifacts: z.array(z.string()),
     success: z.boolean(),
     error: z.string().optional(),
+    repoUrl: z.string().optional(),
     eligibilityQuestions: z.array(z.string()).optional(),
   }),
   outputSchema: z.object({
@@ -175,6 +239,7 @@ const humanReview = createStep({
     workspacePath: z.string(),
     summary: z.string(),
     artifacts: z.array(z.string()),
+    repoUrl: z.string().optional(),
     success: z.boolean(),
     error: z.string().optional(),
     message: z.string(),
@@ -184,7 +249,8 @@ const humanReview = createStep({
       return {
         approved: resumeData.approved,
         listingId: inputData.listingId,
-        link: resumeData.link,
+        // Default the link to the GitHub repo URL if not overridden
+        link: resumeData.link || inputData.repoUrl,
         otherInfo: resumeData.otherInfo,
         eligibilityAnswers: resumeData.eligibilityAnswers,
         telegram: resumeData.telegram,
@@ -196,10 +262,12 @@ const humanReview = createStep({
       workspacePath: inputData.workspacePath,
       summary: inputData.summary,
       artifacts: inputData.artifacts,
+      repoUrl: inputData.repoUrl,
       success: inputData.success,
       error: inputData.error,
-      message:
-        'Review the bounty output above. Resume with { approved: true/false, link?, otherInfo?, eligibilityAnswers?, telegram? }',
+      message: inputData.repoUrl
+        ? `Review the output. GitHub repo: ${inputData.repoUrl}. Resume with { approved: true/false, link?, otherInfo?, eligibilityAnswers?, telegram? }`
+        : 'Review the output. Resume with { approved: true/false, link?, otherInfo?, eligibilityAnswers?, telegram? }',
     });
 
     return {
@@ -209,7 +277,7 @@ const humanReview = createStep({
   },
 });
 
-// Step 4: Submit work
+// Step 5: Submit work
 const submit = createStep({
   id: 'submit-work',
   inputSchema: z.object({
@@ -272,6 +340,7 @@ export const executionWorkflow = createWorkflow({
 })
   .then(deepAnalysis)
   .then(executeWithClaudeCode)
+  .then(publishToGithub)
   .then(humanReview)
   .then(submit)
   .commit();
