@@ -7,4 +7,3 @@ export { fetchCommentsTool } from './fetch-comments.js';
 export { postCommentTool } from './post-comment.js';
 export { claudeCodeExecutorTool } from './claude-code-executor.js';
 export { heartbeatTool, trackAction, getLastApiCallTime } from './heartbeat.js';
-export { publishToGithubTool } from './publish-to-github.js';

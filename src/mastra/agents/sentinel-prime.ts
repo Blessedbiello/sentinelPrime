@@ -9,7 +9,6 @@ import {
   postCommentTool,
   claudeCodeExecutorTool,
   heartbeatTool,
-  publishToGithubTool,
 } from '../tools/index.js';
 
 export const sentinelPrimeAgent = new Agent({
@@ -36,16 +35,14 @@ export const sentinelPrimeAgent = new Agent({
     '   - Quality standards and evaluation criteria',
     '   - Any specific technologies or frameworks mentioned',
     '',
-    '4. PUBLISH (dev bounties): Use publish-to-github to push the workspace to a',
-    '   new GitHub repo. Use the bounty slug as the repo name. This gives you a',
-    '   submission link. Skip this for non-dev bounties.',
-    '',
-    '5. REVIEW: Examine the output from Claude Code. Check:',
+    '4. REVIEW: Examine the output from Claude Code. Check:',
     '   - Does it meet all stated requirements?',
     '   - Is the quality production-ready?',
     '   - Are there any missing pieces?',
     '',
-    '6. SUBMIT: Use submit-work to submit the deliverable.',
+    '   For dev bounties, Claude Code will have created a GitHub repo — use that URL.',
+    '',
+    '5. SUBMIT: Use submit-work to submit the deliverable.',
     '   - Include the workspace path or relevant links',
     '   - Write clear otherInfo describing the submission',
     '   - Handle eligibility answers if required',
@@ -64,7 +61,6 @@ export const sentinelPrimeAgent = new Agent({
     fetchComments: fetchCommentsTool,
     postComment: postCommentTool,
     claudeCodeExecutor: claudeCodeExecutorTool,
-    publishToGithub: publishToGithubTool,
     heartbeat: heartbeatTool,
   },
 });
