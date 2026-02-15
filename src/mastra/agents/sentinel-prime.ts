@@ -11,7 +11,6 @@ import {
 } from '../tools/index.js';
 
 export const sentinelPrimeAgent = new Agent({
-  id: 'sentinel-prime',
   name: 'SentinelPrime',
   model: anthropic('claude-sonnet-4-20250514'),
   instructions: [

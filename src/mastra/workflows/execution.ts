@@ -1,4 +1,5 @@
 import { createWorkflow, createStep } from '@mastra/core/workflows';
+import { RuntimeContext } from '@mastra/core/di';
 import { z } from 'zod';
 import { getListingDetailsTool, fetchCommentsTool, submitWorkTool } from '../tools/index.js';
 import { claudeCodeExecutorTool } from '../tools/claude-code-executor.js';
@@ -25,24 +26,23 @@ const deepAnalysis = createStep({
     })).optional(),
   }),
   execute: async ({ inputData }) => {
-    // Fetch listing details
-    const detailsResult = await getListingDetailsTool.execute({
-      context: { slug: inputData.slug },
-    });
+    const runtimeContext = new RuntimeContext();
+
+    const detailsResult = await getListingDetailsTool.execute(
+      { context: { slug: inputData.slug }, runtimeContext },
+    );
 
     const listing = (detailsResult.listing || {}) as Record<string, any>;
     const listingId = listing.id || '';
 
-    // Fetch comments for additional context
     let comments: Array<{ message: string; authorId?: string }> = [];
     if (listingId) {
-      const commentsResult = await fetchCommentsTool.execute({
-        context: { listingId, skip: 0, take: 50 },
-      });
+      const commentsResult = await fetchCommentsTool.execute(
+        { context: { listingId, skip: 0, take: 50 }, runtimeContext },
+      );
       comments = commentsResult.comments || [];
     }
 
-    // Extract requirements from listing
     const description = [
       listing.description || '',
       listing.requirements || '',
@@ -99,7 +99,8 @@ const executeWithClaudeCode = createStep({
     eligibilityQuestions: z.array(z.string()).optional(),
   }),
   execute: async ({ inputData }) => {
-    // Include comment context in requirements
+    const runtimeContext = new RuntimeContext();
+
     let enrichedRequirements = inputData.requirements;
     if (inputData.comments && inputData.comments.length > 0) {
       const commentContext = inputData.comments
@@ -117,6 +118,7 @@ const executeWithClaudeCode = createStep({
         requirements: enrichedRequirements,
         deliverableFormat: inputData.deliverableFormat,
       },
+      runtimeContext,
     });
 
     return {
@@ -231,8 +233,11 @@ const submit = createStep({
       return { submitted: false, error: 'Submission not approved by human reviewer' };
     }
 
-    const telegram = inputData.telegram || process.env.TELEGRAM_HANDLE
-      ? `http://t.me/${(inputData.telegram || process.env.TELEGRAM_HANDLE || '').replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '')}`
+    const runtimeContext = new RuntimeContext();
+
+    const telegramHandle = inputData.telegram || process.env.TELEGRAM_HANDLE || '';
+    const telegram = telegramHandle
+      ? `http://t.me/${telegramHandle.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '')}`
       : undefined;
 
     const result = await submitWorkTool.execute({
@@ -243,6 +248,7 @@ const submit = createStep({
         eligibilityAnswers: inputData.eligibilityAnswers,
         telegram,
       },
+      runtimeContext,
     });
 
     if (!result.success) {

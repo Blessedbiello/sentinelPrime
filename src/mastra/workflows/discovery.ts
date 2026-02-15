@@ -1,4 +1,5 @@
 import { createWorkflow, createStep } from '@mastra/core/workflows';
+import { RuntimeContext } from '@mastra/core/di';
 import { z } from 'zod';
 import { discoverListingsTool } from '../tools/index.js';
 import { scoutAgent } from '../agents/scout.js';
@@ -24,9 +25,10 @@ const fetchListings = createStep({
     listings: z.array(listingSchema),
   }),
   execute: async ({ inputData }) => {
-    const result = await discoverListingsTool.execute({
-      context: { take: inputData.take, deadline: inputData.deadline },
-    });
+    const runtimeContext = new RuntimeContext();
+    const result = await discoverListingsTool.execute(
+      { context: { take: inputData.take, deadline: inputData.deadline }, runtimeContext },
+    );
     return { listings: result.listings || [] };
   },
 });
@@ -114,7 +116,6 @@ const presentToHuman = createStep({
         'Review the ranked bounties above and provide selectedSlugs array to resume.',
     });
 
-    // Unreachable after suspend, but TypeScript needs a return
     return { selectedSlugs: [] };
   },
 });

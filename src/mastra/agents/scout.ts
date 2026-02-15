@@ -12,7 +12,6 @@ const nosana = createOpenAI({
 });
 
 export const scoutAgent = new Agent({
-  id: 'scout',
   name: 'Scout',
   model: nosana(process.env.NOSANA_MODEL_ID || 'meta-llama/Meta-Llama-3.1-70B-Instruct'),
   instructions: [
