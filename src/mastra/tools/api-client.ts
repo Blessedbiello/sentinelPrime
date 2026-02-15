@@ -1,4 +1,4 @@
-const SUPERTEAM_BASE_URL = process.env.SUPERTEAM_BASE_URL || 'https://earn.superteam.fun';
+const SUPERTEAM_BASE_URL = process.env.SUPERTEAM_BASE_URL || 'https://superteam.fun';
 const SUPERTEAM_API_KEY = process.env.SUPERTEAM_API_KEY || '';
 
 interface FetchOptions {

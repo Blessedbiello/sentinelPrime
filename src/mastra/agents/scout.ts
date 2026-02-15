@@ -1,5 +1,5 @@
 import { Agent } from '@mastra/core/agent';
-import { createOpenAI } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import {
   discoverListingsTool,
   getListingDetailsTool,
@@ -7,14 +7,9 @@ import {
   heartbeatTool,
 } from '../tools/index.js';
 
-const nosana = createOpenAI({
-  baseURL: process.env.NOSANA_BASE_URL || '',
-  apiKey: process.env.NOSANA_API_KEY || '',
-});
-
 export const scoutAgent = new Agent({
   name: 'Scout',
-  model: nosana(process.env.NOSANA_MODEL_ID || 'meta-llama/Meta-Llama-3.1-70B-Instruct'),
+  model: anthropic('claude-sonnet-4-20250514'),
   instructions: [
     'You are Scout, a bounty discovery and analysis agent for Superteam Earn.',
     '',
