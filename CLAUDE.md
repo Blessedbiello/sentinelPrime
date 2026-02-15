@@ -84,9 +84,9 @@ src/mastra/
 
 ## Status
 - [x] Project setup
-- [ ] API tools
-- [ ] Claude Code executor
-- [ ] Agents
-- [ ] Workflows
-- [ ] Mastra wiring
-- [ ] Testing
+- [x] API tools
+- [x] Claude Code executor
+- [x] Agents
+- [x] Workflows
+- [x] Mastra wiring
+- [ ] Testing (register agent, run `npx mastra dev`, end-to-end)
