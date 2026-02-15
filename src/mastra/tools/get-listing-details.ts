@@ -1,6 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { superteamFetch } from './api-client.js';
+import { trackAction } from './heartbeat.js';
 
 export const getListingDetailsTool = createTool({
   id: 'get-listing-details',
@@ -22,6 +23,7 @@ export const getListingDetailsTool = createTool({
       return { success: false, error: `Failed (${res.status})` };
     }
 
+    trackAction(`fetched details for ${context.slug}`, 'analyzing requirements');
     return { success: true, listing: res.data };
   },
 });

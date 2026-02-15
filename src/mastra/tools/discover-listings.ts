@@ -1,6 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { superteamFetch } from './api-client.js';
+import { trackAction } from './heartbeat.js';
 
 export const discoverListingsTool = createTool({
   id: 'discover-listings',
@@ -47,6 +48,7 @@ export const discoverListingsTool = createTool({
       agentAccess: item.agentAccess,
     }));
 
+    trackAction(`discovered ${listings.length} listings`, 'ranking and filtering');
     return { success: true, listings };
   },
 });

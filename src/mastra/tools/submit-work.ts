@@ -1,6 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { superteamFetch } from './api-client.js';
+import { trackAction } from './heartbeat.js';
 
 export const submitWorkTool = createTool({
   id: 'submit-work',
@@ -43,6 +44,7 @@ export const submitWorkTool = createTool({
       };
     }
 
+    trackAction(`submitted work for listing ${context.listingId}`, 'waiting for results');
     return { success: true, submissionId: res.data?.id };
   },
 });

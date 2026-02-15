@@ -8,6 +8,7 @@ import {
   fetchCommentsTool,
   postCommentTool,
   claudeCodeExecutorTool,
+  heartbeatTool,
 } from '../tools/index.js';
 
 export const sentinelPrimeAgent = new Agent({
@@ -58,5 +59,6 @@ export const sentinelPrimeAgent = new Agent({
     fetchComments: fetchCommentsTool,
     postComment: postCommentTool,
     claudeCodeExecutor: claudeCodeExecutorTool,
+    heartbeat: heartbeatTool,
   },
 });

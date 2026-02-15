@@ -4,6 +4,7 @@ import {
   discoverListingsTool,
   getListingDetailsTool,
   fetchCommentsTool,
+  heartbeatTool,
 } from '../tools/index.js';
 
 const nosana = createOpenAI({
@@ -37,5 +38,6 @@ export const scoutAgent = new Agent({
     discoverListings: discoverListingsTool,
     getListingDetails: getListingDetailsTool,
     fetchComments: fetchCommentsTool,
+    heartbeat: heartbeatTool,
   },
 });

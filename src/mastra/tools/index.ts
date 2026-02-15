@@ -6,3 +6,4 @@ export { updateSubmissionTool } from './update-submission.js';
 export { fetchCommentsTool } from './fetch-comments.js';
 export { postCommentTool } from './post-comment.js';
 export { claudeCodeExecutorTool } from './claude-code-executor.js';
+export { heartbeatTool, trackAction, getLastApiCallTime } from './heartbeat.js';
