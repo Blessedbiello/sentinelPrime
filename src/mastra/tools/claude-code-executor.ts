@@ -35,8 +35,8 @@ export const claudeCodeExecutorTool = createTool({
       // 1. Create workspace directory
       await mkdir(workDir, { recursive: true });
 
-      // 2. Write bounty-specific CLAUDE.md
-      const claudeMd = [
+      // 2. Write bounty brief for the workspace
+      const briefMd = [
         `# Bounty: ${context.bountyTitle}`,
         '',
         `## Type: ${context.bountyType}`,
@@ -57,7 +57,7 @@ export const claudeCodeExecutorTool = createTool({
         '- Be thorough and production-quality.',
       ].join('\n');
 
-      await writeFile(join(workDir, 'CLAUDE.md'), claudeMd);
+      await writeFile(join(workDir, 'BRIEF.md'), briefMd);
 
       // 3. Build the prompt for Claude Code
       const prompt = [
@@ -74,7 +74,7 @@ export const claudeCodeExecutorTool = createTool({
         `Deliverable format: ${context.deliverableFormat}`,
         '',
         'Instructions:',
-        '1. Read the CLAUDE.md in this directory for full context.',
+        '1. Read the BRIEF.md in this directory for full context.',
         '2. Produce the required deliverable — write files, code, reports as needed.',
         '3. Create a SUBMISSION.md file summarizing what you produced.',
         '4. Ensure everything is complete and production-quality.',
@@ -105,7 +105,7 @@ export const claudeCodeExecutorTool = createTool({
 
       // 5. List created artifacts
       const files = await readdir(workDir);
-      const artifacts = files.filter((f) => f !== 'CLAUDE.md');
+      const artifacts = files.filter((f) => f !== 'BRIEF.md');
 
       // 6. Extract summary from output (first ~500 chars or SUBMISSION.md content)
       const summary =
